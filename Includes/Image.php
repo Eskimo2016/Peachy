@@ -137,7 +137,7 @@ class Image {
 	 * @var array
 	 * @access protected
 	 */
-	protected $usage = array();
+	protected $usage;
 
 	/**
 	 * List of previous uploads
@@ -145,7 +145,7 @@ class Image {
 	 * @var array
 	 * @access protected
 	 */
-	protected $history = array();
+	protected $history;
 
 	/**
 	 * Other images with identical SHA1 hashes
@@ -153,7 +153,7 @@ class Image {
 	 * @var array
 	 * @access protected
 	 */
-	protected $duplicates = array();
+	protected $duplicates ;
 
 	/**
 	 * Whether image itself exists or not
@@ -168,9 +168,7 @@ class Image {
 	 *
 	 * @access public
 	 * @param Wiki &$wikiClass The Wiki class object
-	 * @param Wiki $wikiClass
 	 * @param string $title
-	 * @return void
 	 */
 	function __construct( Wiki &$wikiClass, $title = null ) {
 
@@ -212,7 +210,9 @@ class Image {
 					}
 				}
 
-			} else $this->exists = false;
+			} else {
+				$this->exists = false;
+			}
 		}
 
 	}
@@ -221,9 +221,9 @@ class Image {
 	 *
 	 * @access public
 	 * @link https://www.mediawiki.org/wiki/API:Properties#imageinfo_.2F_ii
-	 * @param $limit Number of results to limit to. Default 50.
-	 * @param $prop What image information to get.  Default all values.
-	 * @return unknown
+	 * @param int $limit Number of results to limit to. Default 50.
+	 * @param array $prop What image information to get.  Default all values.
+	 * @return array
 	 */
 	public function get_stashinfo( $limit = 50, $prop = array(
 		'timestamp', 'url', 'size', 'dimensions', 'sha1', 'mime', 'thumbmime', 'metadata', 'bitdepth'
@@ -290,11 +290,13 @@ class Image {
 	 * @access public
 	 * @param string $dir Which direction to go. Default 'older'
 	 * @param int $limit Number of revisions to get. Default null (all revisions)
-	 * @return void
+	 * @param bool $force Regenerate the local cache before returning (default: false)
+	 * @return array
 	 */
-	public function get_history( $dir = 'older', $limit = null ) {
-
-		$this->history = $this->page->history( $limit, $dir );
+	public function get_history( $dir = 'older', $limit = null, $force = false ) {
+		if( $force || $this->history === null ) {
+			$this->history = $this->page->history( $limit, $dir );
+		}
 		return $this->history;
 	}
 
@@ -305,12 +307,13 @@ class Image {
 	 * @param string|array $namespace Namespaces to look in. If set as a string, must be set in the syntax "0|1|2|...". If an array, simply the namespace IDs to look in. Default null.
 	 * @param string $redirects How to filter for redirects. Options are "all", "redirects", or "nonredirects". Default "all".
 	 * @param bool $followRedir If linking page is a redirect, find all pages that link to that redirect as well. Default false.
+	 * @param int $limit Limit on the number of usages to return (default null, i.e. all)
+	 * @param bool $force Regenerate the local cache before returning (default: false)
 	 * @return array
 	 */
-	public function get_usage( $namespace = null, $redirects = "all", $followRedir = false, $limit = null ) {
+	public function get_usage( $namespace = null, $redirects = "all", $followRedir = false, $limit = null, $force = false ) {
 
-		if( $force || !count( $this->usage ) ) {
-
+		if( $force || $this->usage === null ) {
 			$iuArray = array(
 				'list'          => 'imageusage',
 				'_code'         => 'iu',
@@ -320,7 +323,6 @@ class Image {
 			);
 
 			if( !is_null( $namespace ) ) {
-
 				if( is_array( $namespace ) ) {
 					$namespace = implode( '|', $namespace );
 				}
@@ -334,7 +336,6 @@ class Image {
 			pecho( "Getting image usage for {$this->title}..\n\n", PECHO_NORMAL );
 
 			$this->usage = $this->wiki->listHandler( $iuArray );
-
 		}
 
 		return $this->usage;
@@ -344,11 +345,13 @@ class Image {
 	 * Returns an array of all files with identical sha1 hashes
 	 *
 	 * @param int $limit Number of duplicates to get. Default null (all)
+	 * @param bool $force Regenerate the local cache before returning (default: false)
 	 * @return array Duplicate files
 	 */
-	public function get_duplicates( $limit = null ) {
+	public function get_duplicates( $limit = null, $force = false ) {
+		if( $force || $this->duplicates === null ) {
 
-		if( $force || !count( $this->duplicates ) ) {
+			$this->duplicates = array();
 
 			if( !$this->page->get_exists() ) {
 				return $this->duplicates;
@@ -385,8 +388,6 @@ class Image {
 				} else {
 					break;
 				}
-
-
 			}
 
 		}
@@ -455,7 +456,7 @@ class Image {
 	 * @return boolean
 	 */
 	public function rotate( $degree = 90 ) {
-		$tokens = $this->get_tokens();
+		$tokens = $this->wiki->get_tokens();
 
 		$apiArray = array(
 			'action' => 'imagerotate',
@@ -471,7 +472,7 @@ class Image {
 			return false;
 		}
 
-		$result = $this->apiQuery( $apiArray, true );
+		$result = $this->wiki->apiQuery( $apiArray, true );
 
 		if( isset( $result['imagerotate'] ) ) {
 			if( isset( $result['imagerotate']['result'] ) && $result['imagerotate']['result'] == "Success" ) {
@@ -491,11 +492,14 @@ class Image {
 	 * Upload an image to the wiki
 	 *
 	 * @access public
+	 * @param array|string Path to file within /Images/, or array of paths to file chunks
 	 * @param string $text Text on the image file page (default: '')
 	 * @param string $comment Comment for inthe upload in logs (default: '')
 	 * @param bool $watch Should the upload be added to the watchlist (default: false)
 	 * @param bool $ignorewarnings Ignore warnings about the upload (default: true)
-	 * @param bool $async Make potentially large file operations asynchronous when possible.  Default false.
+	 * @param bool $async Make potentially large file operations asynchronous when possible (default: false).
+	 * @param bool $tboverride Not used.
+	 * @throws BadEntryError
 	 * @return boolean
 	 */
 	public function upload( $file = null, $text = '', $comment = '', $watch = null, $ignorewarnings = true, $async = false, $tboverride = false ) {
@@ -509,7 +513,7 @@ class Image {
 					if( is_file( $pgIP . 'Images/' . $file ) ) {
 						$file = $pgIP . 'Images/' . $file;
 					} else {
-						$file = $pgIP . 'Images/' . $this->file;
+						$file = $pgIP . 'Images/' . $this->get_localname();
 					}
 
 					if( !is_file( $file ) ) {
@@ -705,6 +709,8 @@ class Image {
 	 * @param string $comment Upload comment.
 	 * @param bool $watch Whether or not to watch the image on uploading
 	 * @param bool $ignorewarnings Whether or not to ignore upload warnings
+	 * @throws DependencyError
+	 * @throws BadEntryError
 	 * @return boolean|null
 	 */
 	public function resize( $width = null, $height = null, $reupload = false, $newname = null, $text = '', $comment = '', $watch = null, $ignorewarnings = true ) {
@@ -897,6 +903,7 @@ class Image {
 
 		$messages = false;
 		$blocked = false;
+		$runtext = null;
 		if( isset( $preeditinfo['query']['pages'] ) && !is_null( $this->wiki->get_runpage() ) ) {
 			//$oldtext = $preeditinfo['query']['pages'][$this->pageid]['revisions'][0]['*'];
 			foreach( $preeditinfo['query']['pages'] as $pageid => $page ){
