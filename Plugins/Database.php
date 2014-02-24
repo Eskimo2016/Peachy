@@ -205,6 +205,10 @@ abstract class DatabaseBase {
 
 	abstract function strencode( $s );
 
+	function freeResult() {
+		pecho( "Error: " . __METHOD__ . " has not been programmed as of yet.\n\n", PECHO_ERROR );
+	}
+
 	/**
 	 * SELECT frontend
 	 * @param string $table Table(s) to select from. If it is an array, the tables will be JOINed.
@@ -250,7 +254,6 @@ abstract class DatabaseBase {
 		if( is_array( $columns ) ) {
 			$columns = implode( ',', $columns );
 		}
-
 
 		if( $where ) {
 			if( is_array( $where ) ) {
@@ -346,7 +349,7 @@ abstract class DatabaseBase {
 	 * UPDATE frontend
 	 * @param string $table Table to update.
 	 * @param array $values Values to set.
-	 * @param array $conds Conditions to update. Default *, updates every entry.
+	 * @param string|array $conds Conditions to update. Default '*' (only allowable string), updates every entry.
 	 * @return resource|ResultWrapper
 	 */
 	function update( $table, $values, $conds = '*' ) {
@@ -381,17 +384,14 @@ abstract class DatabaseBase {
 	/**
 	 * DELETE frontend
 	 * @param string $table Table to delete from.
-	 * @param array $conds Conditions to delete. Default *, deletes every entry.
-	 * @return resource|ResultWrapper
+	 * @param string|array $conds Conditions to delete. Default '*' (only allowable string), deletes every entry.
+	 * @return bool|ResultWrapper
 	 */
 	function delete( $table, $conds = '*' ) {
-
-		Hooks::runHook( 'DatabaseRunDelete', array( &$sql ) );
 
 		$sql = "DELETE FROM {$this->mPrefix}$table";
 
 		if( $conds != '*' ) {
-
 			$cnds = array();
 			foreach( $conds as $col => $val ){
 				$cnds[] = "`$col`" . "= '" . $this->strencode( $val ) . "'";
@@ -401,6 +401,7 @@ abstract class DatabaseBase {
 			$sql .= " WHERE " . $cnds;
 		}
 
+		Hooks::runHook( 'DatabaseRunDelete', array( &$sql ) );
 		return $this->query( $sql );
 	}
 
@@ -568,7 +569,7 @@ class ResultWrapper implements Iterator, Countable, ArrayAccess {
 	/**
 	 * Change the position of the cursor in a result object
 	 *
-	 * @param $row Row to place cursor at
+	 * @param object $row Row to place cursor at
 	 * @return void
 	 * @see http://php.net/mysql_data_seek
 	 */
@@ -770,7 +771,7 @@ class Database {
 	 * @deprecated since 18 June 2013
 	 */
 	public function &init() {
-		self::deprectaedWarn( null, null, "Warning: Database::init() is deprecated. Thanks to the wonders of PHP 5, the call can just be removed." );
+		Peachy::deprecatedWarn( null, null, "Warning: Database::init() is deprecated. Thanks to the wonders of PHP 5, the call can just be removed." );
 		return $this->doInit();
 	}
 
