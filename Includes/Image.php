@@ -172,7 +172,7 @@ class Image {
 	 * @param string $title
 	 * @return void
 	 */
-	function __construct( &$wikiClass, $title = null ) {
+	public function __construct( Wiki &$wikiClass, $title = null, $pageid = null ) {
 
 		$this->wiki = & $wikiClass;
 
@@ -191,7 +191,7 @@ class Image {
 			$this->rawtitle = $this->wiki->removeNamespace( $x['title'] );
 			$this->localname = str_replace( array( ' ', '+' ), array( '_', '_' ), urlencode( $this->rawtitle ) );
 
-			$this->page = & $this->wiki->initPage( $this->title );
+			$this->page = & $this->wiki->initPage( $this->title, $pageid );
 
 			if( $x['imagerepository'] == "shared" ) $this->local = false;
 			if( isset( $x['imageinfo'] ) ) {
@@ -226,8 +226,9 @@ class Image {
 	 * @return unknown
 	 */
 	public function get_stashinfo( $limit = 50, $prop = array(
-		'timestamp', 'url', 'size', 'dimensions', 'sha1', 'mime', 'thumbmime', 'metadata', 'bitdepth'
-	) ) {
+        'timestamp', 'user', 'comment', 'url', 'size', 'dimensions', 'sha1', 'mime', 'metadata', 'archivename',
+        'bitdepth'
+    ) ) {
 
 		$stasharray = array(
 			'prop'     => 'stashimageinfo',
@@ -307,7 +308,7 @@ class Image {
 	 * @param bool $followRedir If linking page is a redirect, find all pages that link to that redirect as well. Default false.
 	 * @return array
 	 */
-	public function get_usage( $namespace = null, $redirects = "all", $followRedir = false, $limit = null ) {
+	public function get_usage( $namespace = null, $redirects = "all", $followRedir = false, $limit = null, $force = false ) {
 
 		if( $force || !count( $this->usage ) ) {
 
@@ -346,18 +347,18 @@ class Image {
 	 * @param int $limit Number of duplicates to get. Default null (all)
 	 * @return array Duplicate files
 	 */
-	public function get_duplicates( $limit = null ) {
+	public function get_duplicates( $limit = null, $force = false ) {
 
 		if( $force || !count( $this->duplicates ) ) {
 
-			if( !$this->page->get_exists() ) {
+			if( !$this->get_exists() ) {
 				return $this->duplicates;
 			}
 
 			$dArray = array(
 				'action'  => 'query',
 				'prop'    => 'duplicatefiles',
-				'dflimit' => ( $this->wiki->get_api_limit() + 1 ),
+				'dflimit' => ( ( is_null( $limit ) ? $this->wiki->get_api_limit() + 1 : $limit ) ),
 				'titles'  => $this->title
 			);
 
@@ -366,7 +367,7 @@ class Image {
 			pecho( "Getting duplicate images of {$this->title}..\n\n", PECHO_NORMAL );
 
 			while( 1 ){
-				if( !is_null( $continue ) ) $tArray['dfcontinue'] = $continue;
+				if( !is_null( $continue ) ) $dArray['dfcontinue'] = $continue;
 
 				$dRes = $this->wiki->apiQuery( $dArray );
 
@@ -403,10 +404,10 @@ class Image {
 	 * @return boolean
 	 */
 	public function revert( $comment = '', $revertto = null ) {
-		global $notag, $tag;
+		global $pgNotag, $pgTag;
 		$tokens = $this->wiki->get_tokens();
 
-		if( !$notag ) $comment .= $tag;
+		if( !$pgNotag ) $comment .= $pgTag;
 		$apiArray = array(
 			'action'   => 'filerevert',
 			'token'    => $tokens['edit'],
@@ -455,7 +456,7 @@ class Image {
 	 * @return boolean
 	 */
 	public function rotate( $degree = 90 ) {
-		$tokens = $this->get_tokens();
+		$tokens = $this->wiki->get_tokens();
 
 		$apiArray = array(
 			'action' => 'imagerotate',
@@ -471,7 +472,7 @@ class Image {
 			return false;
 		}
 
-		$result = $this->apiQuery( $apiArray, true );
+		$result = $this->wiki->apiQuery( $apiArray, true );
 
 		if( isset( $result['imagerotate'] ) ) {
 			if( isset( $result['imagerotate']['result'] ) && $result['imagerotate']['result'] == "Success" ) {
@@ -498,18 +499,16 @@ class Image {
 	 * @param bool $async Make potentially large file operations asynchronous when possible.  Default false.
 	 * @return boolean
 	 */
-	public function upload( $file = null, $text = '', $comment = '', $watch = null, $ignorewarnings = true, $async = false, $tboverride = false ) {
-		global $pgIP, $notag, $tag;
+	public function upload( $file = null, $text = '', $comment = '', $watch = null, $ignorewarnings = true, $async = false ) {
+		global $pgIP, $pgNotag, $pgTag;
 
-		if( !$notag ) $comment .= $tag;
+		if( !$pgNotag ) $comment .= $pgTag;
 		if( !is_array( $file ) ) {
 			if( !preg_match( '@((http(s)?:\/\/)?([-\w]+\.[-\w\.]+)+\w(:\d+)?(/([-\w/_\.]*(\?\S+)?)?)*)@', $file ) ) {
 				if( !is_file( $file ) ) {
 
 					if( is_file( $pgIP . 'Images/' . $file ) ) {
 						$file = $pgIP . 'Images/' . $file;
-					} else {
-						$file = $pgIP . 'Images/' . $this->file;
 					}
 
 					if( !is_file( $file ) ) {
@@ -578,7 +577,7 @@ class Image {
 
 		if( !is_null( $watch ) ) {
 			if( $watch ) {
-				$aprArr['watchlist'] = 'watch';
+				$apiArr['watchlist'] = 'watch';
 			} elseif( !$watch ) $apiArr['watchlist'] = 'nochange';
 			elseif( in_array(
 				$watch, array(
@@ -664,7 +663,7 @@ class Image {
 			pecho( "Attempted to download a file on a shared respository instead of a local one", PECHO_NOTICE );
 		}
 
-		if( !$this->page->get_exists() ) {
+		if( !$this->get_exists() ) {
 			pecho( "Attempted to download a non-existant file.", PECHO_NOTICE );
 		}
 
@@ -707,8 +706,8 @@ class Image {
 	 * @param bool $ignorewarnings Whether or not to ignore upload warnings
 	 * @return boolean|null
 	 */
-	public function resize( $width = null, $height = null, $reupload = false, $newname = null, $text = '', $comment = '', $watch = null, $ignorewarnings = true ) {
-		global $pgIP, $notag, $tag;
+	public function resize( $width = null, $height = null, $reupload = false, $text = '', $comment = '', $watch = null, $ignorewarnings = true ) {
+		global $pgIP, $pgNotag, $pgTag;
 
 		try{
 			$this->preEditChecks( "Resize" );
@@ -717,7 +716,7 @@ class Image {
 			return false;
 		}
 
-		if( !$notag ) $comment .= $tag;
+		if( !$pgNotag ) $comment .= $pgTag;
 		if( !function_exists( 'ImageCreateTrueColor' ) ) {
 			throw new DependencyError( "GD", "http://us2.php.net/manual/en/book.image.php" );
 		}
@@ -731,43 +730,36 @@ class Image {
 				case 'jpeg':
 					$image_create_func = 'ImageCreateFromJPEG';
 					$image_save_func = 'ImageJPEG';
-					$new_image_ext = 'jpg';
 					break;
 
 				case 'png':
 					$image_create_func = 'ImageCreateFromPNG';
 					$image_save_func = 'ImagePNG';
-					$new_image_ext = 'png';
 					break;
 
 				case 'bmp':
 					$image_create_func = 'ImageCreateFromBMP';
 					$image_save_func = 'ImageBMP';
-					$new_image_ext = 'bmp';
 					break;
 
 				case 'gif':
 					$image_create_func = 'ImageCreateFromGIF';
 					$image_save_func = 'ImageGIF';
-					$new_image_ext = 'gif';
 					break;
 
 				case 'vnd.wap.wbmp':
 					$image_create_func = 'ImageCreateFromWBMP';
 					$image_save_func = 'ImageWBMP';
-					$new_image_ext = 'bmp';
 					break;
 
 				case 'xbm':
 					$image_create_func = 'ImageCreateFromXBM';
 					$image_save_func = 'ImageXBM';
-					$new_image_ext = 'xbm';
 					break;
 
 				default:
 					$image_create_func = 'ImageCreateFromJPEG';
 					$image_save_func = 'ImageJPEG';
-					$new_image_ext = 'jpg';
 			}
 			echo "2\n";
 			$image = imagecreatetruecolor( $width, $height );
@@ -808,7 +800,7 @@ class Image {
 	}
 
 	/**
-	 * Deletes the image.
+	 * Deletes the image and page.
 	 *
 	 * @param string $reason A reason for the deletion. Defaults to null (blank).
 	 * @param string|bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default preferences.
@@ -816,60 +808,7 @@ class Image {
 	 * @return bool True on success
 	 */
 	public function delete( $reason = null, $watch = null, $oldimage = null ) {
-		global $notag, $tag;
-		if( !in_array( 'delete', $this->wiki->get_userrights() ) ) {
-			pecho( "User is not allowed to delete pages", PECHO_FATAL );
-			return false;
-		}
-
-		$tokens = $this->wiki->get_tokens();
-		if( !$notag ) $reason .= $tag;
-		$editarray = array(
-			'action' => 'delete',
-			'title'  => $this->title,
-			'token'  => $tokens['delete'],
-			'reason' => $reason
-		);
-
-		if( !is_null( $watch ) ) {
-			if( $watch ) {
-				$editarray['watchlist'] = 'watch';
-			} elseif( !$watch ) $editarray['watchlist'] = 'nochange';
-			elseif( in_array(
-				$watch, array(
-					'watch', 'unwatch', 'preferences', 'nochange'
-				)
-			) ) {
-				$editarray['watchlist'] = $watch;
-			} else pecho( "Watch parameter set incorrectly.  Omitting...\n\n", PECHO_WARN );
-		}
-		if( !is_null( $oldimage ) ) $editarray['oldimage'] = $oldimage;
-
-		Hooks::runHook( 'StartDelete', array( &$editarray ) );
-
-		pecho( "Deleting {$this->title}...\n\n", PECHO_NOTICE );
-
-		try{
-			$this->preEditChecks( "Delete" );
-		} catch( EditError $e ){
-			pecho( "Error: $e\n\n", PECHO_FATAL );
-			return false;
-		}
-
-		$result = $this->wiki->apiQuery( $editarray, true );
-
-		if( isset( $result['delete'] ) ) {
-			if( isset( $result['delete']['title'] ) ) {
-				$this->__construct( $this->wiki, $this->title );
-				return true;
-			} else {
-				pecho( "Delete error...\n\n" . print_r( $result['delete'], true ) . "\n\n", PECHO_FATAL );
-				return false;
-			}
-		} else {
-			pecho( "Delete error...\n\n" . print_r( $result, true ), PECHO_FATAL );
-			return false;
-		}
+		return $this->page->delete( $reason, $watch, $oldimage );
 	}
 
 	/*
@@ -879,55 +818,7 @@ class Image {
 	 * @return void
 	 */
 	protected function preEditChecks( $action = "Edit" ) {
-		global $disablechecks, $masterrunpage;
-		if( $disablechecks ) return;
-		$preeditinfo = array(
-			'action' => 'query',
-			'meta'   => 'userinfo',
-			'uiprop' => 'hasmsg|blockinfo',
-			'prop'   => 'revisions',
-			'rvprop' => 'content'
-		);
-
-		if( !is_null( $this->wiki->get_runpage() ) ) {
-			$preeditinfo['titles'] = $this->wiki->get_runpage();
-		}
-
-		$preeditinfo = $this->wiki->apiQuery( $preeditinfo );
-
-		$messages = false;
-		$blocked = false;
-		if( isset( $preeditinfo['query']['pages'] ) && !is_null( $this->wiki->get_runpage() ) ) {
-			//$oldtext = $preeditinfo['query']['pages'][$this->pageid]['revisions'][0]['*'];
-			foreach( $preeditinfo['query']['pages'] as $pageid => $page ){
-				if( $pageid == "-1" ) {
-					pecho( "$action failed, enable page does not exist.\n\n", PECHO_WARN );
-					throw new EditError( "Enablepage", "Enable page does not exist." );
-				} else {
-					$runtext = $page['revisions'][0]['*'];
-				}
-			}
-			if( isset( $preeditinfo['query']['userinfo']['messages'] ) ) $messages = true;
-			if( isset( $preeditinfo['query']['userinfo']['blockedby'] ) ) $blocked = true;
-		}
-
-		//Perform login checks, /Run checks
-
-		if( !is_null( $masterrunpage ) && !preg_match( '/enable|yes|run|go|true/i', $this->wiki->initPage( $masterrunpage )->get_text() ) ) {
-			throw new EditError( "Enablepage", "Script was disabled by Master Run page" );
-		}
-
-		if( !is_null( $this->wiki->get_runpage() ) && !preg_match( '/enable|yes|run|go|true/i', $runtext ) ) {
-			throw new EditError( "Enablepage", "Script was disabled by Run page" );
-		}
-
-		if( $messages && $this->wiki->get_stoponnewmessages() ) {
-			throw new EditError( "NewMessages", "User has new messages" );
-		}
-
-		if( $blocked ) {
-			throw new EditError( "Blocked", "User has been blocked" );
-		}
+		$this->wiki->preEditChecks( $action );
 	}
 
 	/**

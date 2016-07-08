@@ -1,25 +1,21 @@
 <?php
-
-/*
-This file is part of Peachy MediaWiki Bot API
-
-Peachy is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
 /**
+ * This file is part of Peachy MediaWiki Bot API
+ *
+ * Peachy is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * @file
- * Page object
  */
 
 /**
@@ -29,309 +25,243 @@ class Page {
 
 	/**
 	 * Wiki class
-	 *
 	 * @var Wiki
-	 * @access protected
 	 */
 	protected $wiki;
 
 	/**
 	 * Title of the page
-	 *
 	 * @var string
-	 * @access protected
 	 */
 	protected $title;
 
 	/**
 	 * The ID of the page
-	 *
 	 * @var int
-	 * @access protected
 	 */
 	protected $pageid;
 
 	/**
 	 * If the page exists or not
-	 *
 	 * (default value: true)
-	 *
 	 * @var bool
-	 * @access protected
 	 */
 	protected $exists = true;
 
 	/**
 	 * Whether or not the page is a special page
-	 *
 	 * (default value: false)
-	 *
 	 * @var bool
-	 * @access protected
 	 */
 	protected $special = false;
 
 	/**
 	 * When retriving the page information was a redirect followed
-	 *
 	 * (default value: false)
-	 *
 	 * @var bool
-	 * @access protected
 	 */
 	protected $redirectFollowed = false;
 
 	/**
 	 * The page title without the namespace bit
-	 *
 	 * @var string
-	 * @access protected
 	 */
 	protected $title_wo_namespace;
 
 	/**
 	 * The ID of the namespace
-	 *
 	 * @var int
-	 * @access protected
 	 */
 	protected $namespace_id;
 
 	/**
 	 * Page text
-	 *
 	 * @var string
-	 * @access protected
 	 */
 	protected $content;
 
 	/**
 	 * Templates used in the page
-	 *
-	 * (default value: array())
-	 *
+	 * (default value: null)
 	 * @var array
-	 * @access protected
 	 */
-	protected $templates = array();
+	protected $templates;
 
 	/**
 	 * Protection information for the page
-	 *
-	 * (default value: array())
-	 *
+	 * (default value: null)
 	 * @var array
-	 * @access protected
 	 */
-	protected $protection = array();
+	protected $protection;
 
 	/**
-	 * Cateogories that the page is in
-	 *
-	 * (default value: array())
-	 *
+	 * Categories that the page is in
+	 * (default value: null)
 	 * @var array
-	 * @access protected
 	 */
-	protected $categories = array();
+	protected $categories;
 
 	/**
 	 * Images used in the page
-	 *
-	 * (default value: array())
-	 *
+	 * (default value: null)
 	 * @var array
-	 * @access protected
 	 */
-	protected $images = array();
+	protected $images;
 
 	/**
 	 * Internal links in the page
-	 *
-	 * (default value: array())
-	 *
+	 * (default value: null)
 	 * @var array
-	 * @access protected
 	 */
-	protected $links = array();
+	protected $links;
 
 	/**
 	 * Timestamp of the last edit
-	 *
 	 * @var string
-	 * @access protected
 	 */
 	protected $lastedit;
 
 	/**
 	 * Length of the page in bytes
-	 *
 	 * @var int
-	 * @access protected
 	 */
 	protected $length;
 
 	/**
 	 * Amount of hits (views) the page has
-	 *
 	 * @var int
-	 * @access protected
 	 */
 	protected $hits;
 
 	/**
 	 * Language links on the page
-	 *
-	 * (default value: array())
-	 *
+	 * (default value: null)
 	 * @var array
-	 * @access protected
 	 */
-	protected $langlinks = array();
+	protected $langlinks;
 
 	/**
 	 * External links on the page
-	 *
-	 * (default value: array())
-	 *
+	 * (default value: null)
 	 * @var array
-	 * @access protected
 	 */
-	protected $extlinks = array();
+	protected $extlinks;
 
 	/**
 	 * Interwiki links on the page
-	 *
-	 * (default value: array())
-	 *
+	 * (default value: null)
 	 * @var array
-	 * @access protected
 	 */
-	protected $iwlinks = array();
+	protected $iwlinks;
 
 	/**
 	 * Time of script start.  Must be set manually.
-	 *
 	 * (default null)
-	 *
 	 * @var mixed
-	 * @access protected
 	 */
 	protected $starttimestamp;
 
 	/**
 	 * Page ID of the talk page.
-	 *
 	 * (default null)
-	 *
 	 * @var int
-	 * @access protected
 	 */
 	protected $talkid;
 
 	/**
 	 * Whether the page is watched by the user
-	 *
-	 * (default false)
-	 *
+	 * (default null)
 	 * @var bool
-	 * @access protected
 	 */
-	protected $watched = false;
+	protected $watched;
 
 	/**
 	 * Number of watchers
-	 *
-	 * (default 0)
-	 *
+	 * (default null)
 	 * @var int
-	 * @access protected
 	 */
-	protected $watchers = 0;
+	protected $watchers;
 
 	/**
 	 * Watchlist notification timestamp
-	 *
 	 * (default null)
-	 *
 	 * @var string
-	 * @access protected
 	 */
 	protected $watchlisttimestamp;
 
 	/**
 	 * Page ID of parent page
-	 *
 	 * (default null)
-	 *
 	 * @var int
-	 * @access protected
 	 */
 	protected $subjectid;
 
 	/**
 	 * Full urls of the page
-	 *
-	 * (default array())
-	 *
+	 * (default null)
 	 * @var array
-	 * @access protected
 	 */
-	protected $urls = array();
+	protected $urls;
 
 	/**
 	 * Whether the page can be read by a user
-	 *
-	 * (default false)
-	 *
+	 * (default null)
 	 * @var bool
-	 * @access protected
 	 */
-	protected $readable = false;
+	protected $readable;
 
 	/**
 	 * EditFormPreloadText
-	 *
 	 * (default null)
-	 *
 	 * @var string
-	 * @access protected
 	 */
 	protected $preload;
 
 	/**
 	 * Page's title formatting
-	 *
 	 * (default null)
-	 *
 	 * @var string
-	 * @access protected
 	 */
 	protected $displaytitle;
 
 	/**
 	 * Page properties
-	 *
-	 * (default array())
-	 *
+	 * (default null)
 	 * @var array
-	 * @access protected
 	 */
-	protected $properties = array();
+	protected $properties;
 
 	/**
 	 * Construction method for the Page class
 	 *
-	 * @access public
 	 * @param Wiki $wikiClass The Wiki class object
 	 * @param mixed $title Title of the page (default: null)
 	 * @param mixed $pageid ID of the page (default: null)
 	 * @param bool $followRedir Should it follow a redirect when retrieving the page (default: true)
 	 * @param bool $normalize Should the class automatically normalize the title (default: true)
-	 * @param string $timestamp Set the start of a program or start reference to avoid edit conflicts.
-	 * @return void
+	 * @param string|double|int $timestamp Set the start of a program or start reference to avoid edit conflicts.
+	 *
+	 * @throws InvalidArgumentException
+	 * @throws NoTitle
+	 * @return Page
 	 */
-	function __construct( $wikiClass, $title = null, $pageid = null, $followRedir = true, $normalize = true, $timestamp = null ) {
+	public function __construct( Wiki $wikiClass, $title = null, $pageid = null, $followRedir = true, $normalize = true, $timestamp = null ) {
+		if( !is_string( $title ) && !is_null( $title ) ) {
+			throw new InvalidArgumentException( '$title must be a string or null' );
+		}
+		if( !is_int( $pageid ) && !is_null( $pageid ) && !is_string( $pageid ) ) {
+			throw new InvalidArgumentException( '$pageid must be a int, string, or null' );
+		}
+		if( !is_bool( $followRedir ) ) {
+			throw new InvalidArgumentException( '$followRedir must be a bool' );
+		}
+		if( !is_bool( $normalize ) ) {
+			throw new InvalidArgumentException( '$normalize must be a bool' );
+		}
+		if( !is_string( $timestamp ) && !is_double( $timestamp ) && !is_int( $timestamp ) && !is_null( $timestamp ) ) {
+			throw new InvalidArgumentException( '$timestamp must be a string, int, double or null' );
+		}
+
 		$this->wiki = $wikiClass;
 
 		if( is_null( $title ) && is_null( $pageid ) ) {
@@ -371,24 +301,19 @@ class Page {
 
 		pecho( "Getting page info for {$peachout}..\n\n", PECHO_NORMAL );
 
-		$info = $this->get_metadata( $pageInfoArray );
+		$this->get_metadata( $pageInfoArray );
 		if( !is_null( $timestamp ) ) $this->starttimestamp = $timestamp;
-
-		if( isset( $info['query']['redirects'][0] ) ) {
-			$this->redirectFollowed = true;
-		}
-
 	}
 
 	/**
 	 * Returns page history. Can be specified to return content as well
 	 *
-	 * @access public
 	 * @param int $count Revisions to return (default: 1)
 	 * @param string $dir Direction to return revisions (default: "older")
 	 * @param bool $content Should content of that revision be returned as well (default: false)
 	 * @param int $revid Revision ID to start from (default: null)
 	 * @param bool $rollback_token Should a rollback token be returned (default: false)
+	 * @param bool $recurse Used internally to provide more results than can be returned with a single API query
 	 * @return array Revision data
 	 */
 	public function history( $count = 1, $dir = "older", $content = false, $revid = null, $rollback_token = false, $recurse = false ) {
@@ -422,29 +347,26 @@ class Page {
 			}
 
 			return $history[0];
-
-		} else {
-			$historyResult = $this->wiki->apiQuery( $historyArray );
-
-			if( $recurse ) {
-				if( isset( $historyResult['query-continue'] ) ) {
-					return array(
-						$historyResult['query']['pages'][$this->pageid]['revisions'],
-						$historyResult['query-continue']['revisions']['rvcontinue']
-					);
-				}
-				return array( $historyResult['query']['pages'][$this->pageid]['revisions'], null );
-			} else {
-				return $historyResult['query']['pages'][$this->pageid]['revisions'];
-			}
 		}
 
+		$historyResult = $this->wiki->apiQuery( $historyArray );
+
+		if( $recurse ) {
+			if( isset( $historyResult['query-continue'] ) ) {
+				return array(
+					$historyResult['query']['pages'][$this->pageid]['revisions'],
+					$historyResult['query-continue']['revisions']['rvcontinue']
+				);
+			}
+			return array( $historyResult['query']['pages'][$this->pageid]['revisions'], null );
+		}
+
+		return $historyResult['query']['pages'][$this->pageid]['revisions'];
 	}
 
 	/**
 	 * Retrieves text from a page, or a cached copy unless $force is true
 	 *
-	 * @access public
 	 * @param bool $force Grab text from the API, don't use the cached copy (default: false)
 	 * @param string|int $section Section title or ID to retrieve
 	 * @return string Page content
@@ -519,7 +441,7 @@ class Page {
 
 			return $substr;
 		} else {
-			if( !$force && !empty( $this->content ) ) {
+			if( !$force && $this->content !== null ) {
 				return $this->content;
 			}
 
@@ -542,7 +464,6 @@ class Page {
 	/**
 	 * Returns if the page exists
 	 *
-	 * @access public
 	 * @return bool Exists
 	 * @deprecated since 18 June 2013
 	 */
@@ -554,7 +475,6 @@ class Page {
 	/**
 	 * Returns if the page exists
 	 *
-	 * @access public
 	 * @return bool Exists
 	 */
 	public function get_exists() {
@@ -564,7 +484,6 @@ class Page {
 	/**
 	 * Returns links on the page.
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#links_.2F_pl
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @param array $namespace Show links in this namespace(s) only.  Default array()
@@ -573,10 +492,11 @@ class Page {
 	 */
 	public function get_links( $force = false, $namespace = array(), $titles = array() ) {
 
-		if( !$force && count( $this->links ) > 0 ) {
+		if( !$force && $this->links !== null ) {
 			return $this->links;
 		}
 
+		$this->links = array();
 		if( !$this->exists ) return array();
 
 		$tArray = array(
@@ -588,8 +508,6 @@ class Page {
 
 		if( !empty( $namespace ) ) $tArray['plnamespace'] = implode( '|', $namespace );
 		if( !empty( $titles ) ) $tArray['pltitles'] = implode( '|', $titles );
-
-		$this->links = array();
 
 		pecho( "Getting internal links on {$this->title}..\n\n", PECHO_NORMAL );
 
@@ -606,8 +524,7 @@ class Page {
 
 	/**
 	 * Returns templates on the page
-	 *
-	 * @access public
+	 * 
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#templates_.2F_tl
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @param array $namespace Show templates in this namespace(s) only. Default array().
@@ -616,10 +533,11 @@ class Page {
 	 */
 	public function get_templates( $force = false, $namespace = array(), $template = array() ) {
 
-		if( !$force && count( $this->templates ) > 0 && empty( $namespace ) && empty( $template ) ) {
+		if( !$force && $this->templates !== null && empty( $namespace ) && empty( $template ) ) {
 			return $this->templates;
 		}
 
+		$this->templates = array();
 		if( !$this->exists ) return array();
 
 		$tArray = array(
@@ -630,8 +548,6 @@ class Page {
 		);
 		if( !empty( $namespace ) ) $tArray['tlnamespace'] = implode( '|', $namespace );
 		if( !empty( $template ) ) $tArray['tltemplates'] = implode( '|', $template );
-
-		$this->templates = array();
 
 		pecho( "Getting templates transcluded on {$this->title}..\n\n", PECHO_NORMAL );
 
@@ -648,18 +564,18 @@ class Page {
 
 	/**
 	 * Get various properties defined in the page content
-	 *
-	 * @access public
+	 * 
 	 * @link https://www.mediawiki.org/wiki/API:Properties#pageprops_.2F_pp
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return bool|array False on error, array of template titles
 	 */
 	public function get_properties( $force = false ) {
 
-		if( !$force && count( $this->properties ) > 0 ) {
+		if( !$force && $this->properties !== null ) {
 			return $this->properties;
 		}
 
+		$this->properties = array();
 		if( !$this->exists ) return array();
 
 		$tArray = array(
@@ -667,8 +583,6 @@ class Page {
 			'titles' => $this->title,
 			'_code'  => 'pp'
 		);
-
-		$this->properties = array();
 
 		pecho( "Getting page properties on {$this->title}..\n\n", PECHO_NORMAL );
 
@@ -679,8 +593,7 @@ class Page {
 
 	/**
 	 * Returns categories of page
-	 *
-	 * @access public
+	 * 
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#categories_.2F_cl
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @param array|string $prop Which additional properties to get for each category. Default all
@@ -691,10 +604,11 @@ class Page {
 		'sortkey', 'timestamp', 'hidden'
 	), $hidden = false ) {
 
-		if( !$force && count( $this->categories ) > 0 ) {
+		if( !$force && $this->categories !== null ) {
 			return $this->categories;
 		}
 
+		$this->categories = array();
 		if( !$this->exists ) return array();
 
 		$tArray = array(
@@ -706,8 +620,6 @@ class Page {
 		);
 
 		if( $hidden ) $tArray['clshow'] = 'yes';
-
-		$this->categories = array();
 
 		pecho( "Getting categories {$this->title} is part of..\n\n", PECHO_NORMAL );
 
@@ -725,8 +637,7 @@ class Page {
 
 	/**
 	 * Returns images used in the page
-	 *
-	 * @access public
+	 * 
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#images_.2F_im
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @param string|array $images Only list these images. Default null.
@@ -734,10 +645,11 @@ class Page {
 	 */
 	public function get_images( $force = false, $images = null ) {
 
-		if( !$force && count( $this->images ) > 0 ) {
+		if( !$force && $this->images !== null ) {
 			return $this->images;
 		}
 
+		$this->images = array();
 		if( !$this->exists ) return array();
 
 		$tArray = array(
@@ -746,8 +658,6 @@ class Page {
 			'_code'    => 'im',
 			'_lhtitle' => 'images'
 		);
-
-		$this->images = array();
 
 		if( !is_null( $images ) ) {
 			if( is_array( $images ) ) {
@@ -772,18 +682,18 @@ class Page {
 
 	/**
 	 * Returns external links used in the page
-	 *
-	 * @access public
+	 * 
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#extlinks_.2F_el
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return bool|array False on error, returns array of URLs
 	 */
 	public function get_extlinks( $force = false ) {
 
-		if( !$force && count( $this->extlinks ) > 0 ) {
+		if( !$force && $this->extlinks !== null ) {
 			return $this->extlinks;
 		}
 
+		$this->extlinks = array();
 		if( !$this->exists ) return array();
 
 		$tArray = array(
@@ -792,8 +702,6 @@ class Page {
 			'_code'    => 'el',
 			'_lhtitle' => 'extlinks'
 		);
-
-		$this->extlinks = array();
 
 		pecho( "Getting external links used on {$this->title}..\n\n", PECHO_NORMAL );
 
@@ -811,7 +719,6 @@ class Page {
 	/**
 	 * Returns interlanguage links on the page
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#langlinks_.2F_ll
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @param bool $fullurl Include a list of full of URLs.  Output formatting changes.  Requires force parameter to be true to return a different result.
@@ -820,10 +727,11 @@ class Page {
 	 * @return bool|array False on error, returns array of links in the form of lang:title
 	 */
 	public function get_langlinks( $force = false, $fullurl = false, $title = null, $lang = null ) {
-		if( !$force && count( $this->langlinks ) > 0 ) {
+		if( !$force && $this->langlinks !== null ) {
 			return $this->langlinks;
 		}
 
+		$this->langlinks = array();
 		if( !$this->exists ) return array();
 
 		$tArray = array(
@@ -836,8 +744,6 @@ class Page {
 		if( !is_null( $lang ) ) $tArray['lllang'] = $lang;
 		if( !is_null( $title ) ) $tArray['lltitle'] = $title;
 		if( $fullurl ) $tArray['llurl'] = 'yes';
-
-		$this->langlinks = array();
 
 		pecho( "Getting all interlanguage links for {$this->title}..\n\n", PECHO_NORMAL );
 
@@ -859,7 +765,6 @@ class Page {
 	/**
 	 * Returns interwiki links on the page
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#langlinks_.2F_ll
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @param bool $fullurl Include a list of full of URLs.  Output formatting changes.  Requires force parameter to be true to return a different result.
@@ -868,10 +773,11 @@ class Page {
 	 * @return bool|array False on error, returns array of links in the form of lang:title
 	 */
 	public function get_interwikilinks( $force = false, $fullurl = false, $title = null, $prefix = null ) {
-		if( !$force && count( $this->iwlinks ) > 0 ) {
+		if( !$force && $this->iwlinks !== null ) {
 			return $this->iwlinks;
 		}
 
+		$this->iwlinks = array();
 		if( !$this->exists ) return array();
 
 		$tArray = array(
@@ -885,7 +791,6 @@ class Page {
 		if( !is_null( $title ) ) $tArray['iwtitle'] = $title;
 		if( $fullurl ) $tArray['iwurl'] = 'yes';
 
-		$this->iwlinks = array();
 
 		pecho( "Getting all interwiki links for {$this->title}..\n\n", PECHO_NORMAL );
 
@@ -907,18 +812,17 @@ class Page {
 	/**
 	 * Returns the protection level of the page
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#info_.2F_in
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return bool|array False on error, returns array with protection levels
 	 */
 	public function get_protection( $force = false ) {
 
-		if( !$force ) {
+		if( !$force && $this->protection !== null ) {
 			return $this->protection;
 		}
 
-		if( !$this->exists ) return array();
+		$this->protection = array();
 
 		$tArray = array(
 			'action' => 'query',
@@ -940,7 +844,6 @@ class Page {
 	/**
 	 * Returns the page ID of the talk page for each non-talk page
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#info_.2F_in
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return int Null or empty if no id exists.
@@ -972,14 +875,13 @@ class Page {
 	/**
 	 * Returns the watch status of the page
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#info_.2F_in
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return bool
 	 */
 	public function is_watched( $force = false ) {
 
-		if( !$force ) {
+		if( !$force && $this->watched !== null ) {
 			return $this->watched;
 		}
 
@@ -1004,14 +906,13 @@ class Page {
 	/**
 	 * Returns the count for the number of watchers of a page.
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#info_.2F_in
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return int
 	 */
 	public function get_watchcount( $force = false ) {
 
-		if( !$force ) {
+		if( !$force && $this->watchers !== null ) {
 			return $this->watchers;
 		}
 
@@ -1036,7 +937,6 @@ class Page {
 	/**
 	 * Returns the watchlist notification timestamp of each page.
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#info_.2F_in
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return string
@@ -1068,7 +968,6 @@ class Page {
 	/**
 	 * Returns the page ID of the parent page for each talk page.
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#info_.2F_in
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return int Null if it doesn't exist.
@@ -1100,14 +999,13 @@ class Page {
 	/**
 	 * Gives a full URL to the page, and also an edit URL.
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#info_.2F_in
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return array
 	 */
 	public function get_urls( $force = false ) {
 
-		if( !$force ) {
+		if( !$force && $this->urls !== null ) {
 			return $this->urls;
 		}
 
@@ -1121,11 +1019,12 @@ class Page {
 		pecho( "Getting the URLs for {$this->title}..\n\n", PECHO_NORMAL );
 
 		$tRes = $this->wiki->apiQuery( $tArray );
+		$info = $tRes['query']['pages'][$this->pageid];
 
 		$this->urls = array();
 
-		if( isset( $tRes['query']['pages'][$this->pageid]['fullurl'] ) ) $this->urls['full'] = $info['fullurl'];
-		if( isset( $tRes['query']['pages'][$this->pageid]['editurl'] ) ) $this->urls['edit'] = $info['editurl'];
+		if( isset( $info['fullurl'] ) ) $this->urls['full'] = $info['fullurl'];
+		if( isset( $info['editurl'] ) ) $this->urls['edit'] = $info['editurl'];
 
 		return $this->urls;
 	}
@@ -1133,14 +1032,13 @@ class Page {
 	/**
 	 * Returns whether the user can read this page.
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#info_.2F_in
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return boolean Null if it doesn't exist.
 	 */
 	public function get_readability( $force = false ) {
 
-		if( !$force ) {
+		if( !$force && $this->readable !== null ) {
 			return $this->readable;
 		}
 
@@ -1165,7 +1063,6 @@ class Page {
 	/**
 	 * Gives the text returned by EditFormPreloadText.
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#info_.2F_in
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return string
@@ -1197,7 +1094,6 @@ class Page {
 	/**
 	 * Gives the way the page title is actually displayed.
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Query_-_Properties#info_.2F_in
 	 * @param bool $force Force use of API, won't use cached copy (default: false)
 	 * @return string
@@ -1229,18 +1125,17 @@ class Page {
 	/**
 	 * Edits the page
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Edit_-_Create%26Edit_pages
 	 * @param string $text Text of the page that will be saved
 	 * @param string $summary Summary of the edit (default: "")
 	 * @param bool $minor Minor edit (default: false)
 	 * @param bool $bot Mark as bot edit (default: true)
 	 * @param bool $force Override nobots check (default: false)
-	 * @param string $pend Set to 'pre' or 'ap' to prepend or append, respectively (default: null)
+	 * @param string $pend Set to 'pre' or 'ap' to prepend or append, respectively (default: "")
 	 * @param bool $create Set to 'never', 'only', or 'recreate' to never create a new page, only create a new page, or override errors about the page having been deleted, respectively (default: false)
 	 * @param string $section Section number. 0 for the top section, 'new' for a new section.  Default null.
 	 * @param string $sectiontitle The title for a new section. Default null.
-	 * @param string or bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch.  Default preferences.
+	 * @param string|bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default: go by user preference.
 	 * @return int|bool The revision id of the successful edit, false on failure.
 	 */
 	public function edit(
@@ -1249,22 +1144,19 @@ class Page {
 		$minor = false,
 		$bot = true,
 		$force = false,
-		$pend = false,
+		$pend = "",
 		$create = false,
 		$section = null,
 		$sectiontitle = null,
 		$watch = null
 	) {
-		global $notag, $tag;
+		global $pgNotag, $pgTag;
 
 		$tokens = $this->wiki->get_tokens();
 
-		if( !$notag ) $summary .= $tag;
+		if( !$pgNotag ) $summary .= $pgTag;
 
-		if( $tokens['edit'] == '+\\' ) {
-			pecho( "User has logged out.\n\n", PECHO_FATAL );
-			return false;
-		} elseif( $tokens['edit'] == '' ) {
+		if( $tokens['edit'] == '' ) {
 			pecho( "User is not allowed to edit {$this->title}\n\n", PECHO_FATAL );
 			return false;
 		}
@@ -1282,8 +1174,7 @@ class Page {
 			'token'         => $tokens['edit'],
 			'basetimestamp' => $this->lastedit,
 			'md5'           => md5( $text ),
-			'text'          => $text,
-			'assert'        => 'user',
+			'text'          => $text
 		);
 		if( !is_null( $this->starttimestamp ) ) $editarray['starttimestamp'] = $this->starttimestamp;
 		if( !is_null( $section ) ) {
@@ -1373,7 +1264,6 @@ class Page {
 	/**
 	 * Add text to the beginning of the page. Shortcut for Page::edit()
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Edit_-_Create%26Edit_pages
 	 * @param string $text Text of the page that will be saved
 	 * @param string $summary Summary of the edit (default: "")
@@ -1381,7 +1271,7 @@ class Page {
 	 * @param bool $bot Mark as bot edit (default: true)
 	 * @param bool $force Override nobots check (default: false)
 	 * @param bool $create Set to 'never', 'only', or 'recreate' to never create a new page, only create a new page, or override errors about the page having been deleted, respectively (default: false)
-	 * @param string or bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch.  Default preferences.
+	 * @param string|bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch.  Default: go by user preference.
 	 * @return int|bool The revision id of the successful edit, false on failure.
 	 */
 	public function prepend( $text, $summary = "", $minor = false, $bot = true, $force = false, $create = false, $watch = null ) {
@@ -1391,7 +1281,6 @@ class Page {
 	/**
 	 * Add text to the end of the page. Shortcut for Page::edit()
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Edit_-_Create%26Edit_pages
 	 * @param string $text Text of the page that will be saved
 	 * @param string $summary Summary of the edit (default: "")
@@ -1399,7 +1288,7 @@ class Page {
 	 * @param bool $bot Mark as bot edit (default: true)
 	 * @param bool $force Override nobots check (default: false)
 	 * @param bool $create Set to 'never', 'only', or 'recreate' to never create a new page, only create a new page, or override errors about the page having been deleted, respectively (default: false)
-	 * @param string or bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch.  Default preferences.
+	 * @param string|bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default: go by user preference.
 	 * @return int|bool The revision id of the successful edit, false on failure.
 	 */
 	public function append( $text, $summary = "", $minor = false, $bot = true, $force = false, $create = false, $watch = null ) {
@@ -1409,7 +1298,6 @@ class Page {
 	/**
 	 * Create a new section.  Shortcut for Page::edit()
 	 *
-	 * @access public
 	 * @link http://www.mediawiki.org/wiki/API:Edit_-_Create%26Edit_pages
 	 * @param string $text Text of the page that will be saved
 	 * @param string $sectiontitle The title for a new section. Default null.
@@ -1418,7 +1306,7 @@ class Page {
 	 * @param bool $bot Mark as bot edit (default: true)
 	 * @param bool $force Override nobots check (default: false)* @param bool $create Set to 'never', 'only', or 'recreate' to never create a new page, only create a new page, or override errors about the page having been deleted, respectively (default: false)
 	 * @param bool $create Set to 'never', 'only', or 'recreate' to never create a new page, only create a new page, or override errors about the page having been deleted, respectively (default: false)
-	 * @param string or bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch.  Default preferences.
+	 * @param string|bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default: go by user preference.
 	 * @return int|bool The revision id of the successful edit, false on failure.
 	 */
 	public function newsection( $text, $sectiontitle, $summary = null, $minor = false, $bot = true, $force = false, $create = false, $watch = null ) {
@@ -1429,7 +1317,6 @@ class Page {
 	/*
 	 * Undoes one or more edits. (Subject to standard editing restrictions.)
 	 *
-	 * @access public
 	 * @param bool $force Force an undo, despite e.g. new messages (default false).
 	 * @param string $summary Override the default edit summary (default null).
 	 * @param int $revisions The number of revisions to undo (default 1).
@@ -1437,7 +1324,7 @@ class Page {
 	 * @return int The new revision id of the page edited.
 	 */
 	public function undo( $summary = null, $revisions = 1, $force = false, $watch = null ) {
-		global $notag, $tag;
+		global $pgNotag, $pgTag;
 		$info = $this->history( $revisions );
 		$oldrev = $info[( count( $info ) - 1 )]['revid'];
 		$newrev = $info[0]['revid'];
@@ -1458,8 +1345,7 @@ class Page {
 			'token'         => $tokens['edit'],
 			'basetimestamp' => $this->lastedit,
 			'undo'          => $oldrev,
-			'undoafter'     => $newrev,
-			'assert'        => 'user',
+			'undoafter'     => $newrev
 		);
 		if( !is_null( $this->starttimestamp ) ) $params['starttimestamp'] = $this->starttimestamp;
 		if( !is_null( $summary ) ) {
@@ -1467,7 +1353,7 @@ class Page {
 				pecho( "Summary is over 255 bytes, the maximum allowed.\n\n", PECHO_FATAL );
 				return false;
 			}
-			if( !$notag ) $summary .= $tag;
+			if( !$pgNotag ) $summary .= $pgTag;
 
 			$params['summary'] = $summary;
 		}
@@ -1529,24 +1415,20 @@ class Page {
 	 * @return bool True if discussion page, false if not
 	 */
 	public function is_discussion() {
-		if( $this->namespace_id >= 0 && $this->namespace_id % 2 == 1 ) {
-			return true;
-		} else {
-			return false;
-		}
+		return ( $this->namespace_id >= 0 && $this->namespace_id % 2 == 1 );
 	}
 
 	/**
 	 * Returns the title of the discussion (talk) page associated with a page, if it exists.
 	 *
 	 * @return string Title of discussion page
+	 * @throws BadEntryError
 	 */
 	public function get_discussion() {
-		if( $this->namespace_id < 0 || $this->namespace_id === "" ) {
+		if( $this->namespace_id < 0 ) {
 			// No discussion page exists
 			// Guessing we want to error
 			throw new BadEntryError( "get_discussion", "Tried to find the discussion page of a page which could never have one" );
-			return false;
 		} else {
 			$namespaces = $this->wiki->get_namespaces();
 			if( $this->is_discussion() ) {
@@ -1565,12 +1447,12 @@ class Page {
 	 * @param bool $movetalk Whether or not to move any associated talk (discussion) page.
 	 * @param bool $movesubpages Whether or not to move any subpages.
 	 * @param bool $noredirect Whether or not to suppress the leaving of a redirect to the new title at the old title.
-	 * @param string or bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch.  Default preferences.
+	 * @param string|bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default: go by user preference.
 	 * @param bool $nowarnings Ignore any warnings. Default false.
 	 * @return bool True on success
 	 */
 	public function move( $newTitle, $reason = '', $movetalk = true, $movesubpages = true, $noredirect = false, $watch = null, $nowarnings = false ) {
-		global $notag, $tag;
+		global $pgNotag, $pgTag;
 		$tokens = $this->wiki->get_tokens();
 
 		if( $tokens['move'] == '+\\' ) {
@@ -1616,7 +1498,7 @@ class Page {
 		}
 
 		if( $nowarnings ) $editarray['ignorewarnings'] = 'yes';
-		if( !$notag ) $reason .= $tag;
+		if( !$pgNotag ) $reason .= $pgTag;
 		if( !empty( $reason ) ) $editarray['reason'] = $reason;
 
 		if( $movetalk ) $editarray['movetalk'] = 'yes';
@@ -1651,21 +1533,24 @@ class Page {
 	 *
 	 * @param array $levels Array of protections levels. The key is the type, the value is the level. Default: array( 'edit' => 'sysop', 'move' => 'sysop' )
 	 * @param string $reason Reason for protection. Default null
+	 * @param string $expiry Expiry time. Default 'indefinite'
 	 * @param bool $cascade Whether or not to enable cascade protection. Default false
-	 * @param string or bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default preferences.
+	 * @param string|bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default: go by user preference.
 	 * @return bool True on success
 	 */
-	public function protect( $levels = array(
-		'edit' => 'sysop', 'move' => 'sysop'
-	), $reason = null, $expiry = 'indefinite', $cascade = false, $watch = null ) {
-		global $notag, $tag;
+	public function protect( $levels = null, $reason = null, $expiry = 'indefinite', $cascade = false, $watch = null ) {
+		global $pgNotag, $pgTag;
 		if( !in_array( 'protect', $this->wiki->get_userrights() ) ) {
 			pecho( "User is not allowed to protect pages", PECHO_FATAL );
 			return false;
 		}
 
+		if( $levels === null ){
+			$levels = array( 'edit' => 'sysop', 'move' => 'sysop' );
+		}
+
 		$tokens = $this->wiki->get_tokens();
-		if( !$notag ) $reason .= $tag;
+		if( !$pgNotag ) $reason .= $pgTag;
 		$editarray = array(
 			'action'      => 'protect',
 			'title'       => $this->title,
@@ -1727,7 +1612,7 @@ class Page {
 	 * Unprotects the page.
 	 *
 	 * @param string $reason A reason for the unprotection. Defaults to null (blank).
-	 * @param string or bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default preferences.
+	 * @param string|bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default: go by user preference.
 	 * @return bool True on success
 	 */
 	public function unprotect( $reason = null, $watch = null ) {
@@ -1738,11 +1623,12 @@ class Page {
 	 * Deletes the page.
 	 *
 	 * @param string $reason A reason for the deletion. Defaults to null (blank).
-	 * @param string or bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default preferences.
+	 * @param string|bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default: go by user preference.
+     * @param string $oldimage The name of the old image to delete as provided by iiprop=archivename
 	 * @return bool True on success
 	 */
-	public function delete( $reason = null, $watch = null ) {
-		global $notag, $tag;
+	public function delete( $reason = null, $watch = null, $oldimage = null ) {
+		global $pgNotag, $pgTag;
 
 		if( !in_array( 'delete', $this->wiki->get_userrights() ) ) {
 			pecho( "User is not allowed to delete pages", PECHO_FATAL );
@@ -1750,7 +1636,7 @@ class Page {
 		}
 
 		$tokens = $this->wiki->get_tokens();
-		if( !$notag ) $reason .= $tag;
+		if( !$pgNotag ) $reason .= $pgTag;
 		$editarray = array(
 			'action' => 'delete',
 			'title'  => $this->title,
@@ -1770,6 +1656,7 @@ class Page {
 				$editarray['watchlist'] = $watch;
 			} else pecho( "Watch parameter set incorrectly.  Omitting...\n\n", PECHO_WARN );
 		}
+        if( !is_null( $oldimage ) ) $editarray['oldimage'] = $oldimage;
 
 		Hooks::runHook( 'StartDelete', array( &$editarray ) );
 
@@ -1801,21 +1688,20 @@ class Page {
 	/**
 	 * Undeletes the page
 	 *
-	 * @access public
 	 * @param string $reason Reason for undeletion
 	 * @param array $timestamps Array of timestamps to selectively restore
-	 * @param string or bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default preferences.
+	 * @param string|bool $watch Unconditionally add or remove the page from your watchlist, use preferences or do not change watch. Default: go by user preference.
 	 * @return bool
 	 */
 	public function undelete( $reason = null, $timestamps = null, $watch = null ) {
-		global $notag, $tag;
+		global $pgNotag, $pgTag;
 		if( !in_array( 'undelete', $this->wiki->get_userrights() ) ) {
 			pecho( "User is not allowed to undelete pages", PECHO_FATAL );
 			return false;
 		}
 
 		$tokens = $this->wiki->get_tokens();
-		if( !$notag ) $reason .= $tag;
+		if( !$pgNotag ) $reason .= $pgTag;
 		$undelArray = array(
 			'action' => 'undelete',
 			'title'  => $this->title,
@@ -1873,7 +1759,6 @@ class Page {
 	/**
 	 * List deleted revisions of the page
 	 *
-	 * @access public
 	 * @param bool $content Whether or not to retrieve the content of each revision, Default false
 	 * @param string $user Only list revisions by this user. Default null.
 	 * @param string $excludeuser Don't list revisions by this user. Default null
@@ -1926,7 +1811,7 @@ class Page {
 	/**
 	 * Adds the page to the logged in user's watchlist
 	 *
-	 * @param $lang Language to show the message in
+	 * @param string $lang The code for the language to show any error message in (default: user preference)
 	 * @return bool True on success
 	 */
 	public function watch( $lang = null ) {
@@ -1969,7 +1854,7 @@ class Page {
 	/**
 	 * Removes the page to the logged in user's watchlist
 	 *
-	 * @param $lang Language to show the message in
+	 * @param string $lang The code for the language to show any error message in (default: user preference)
 	 * @return bool True on sucecess
 	 */
 	public function unwatch( $lang = null ) {
@@ -2059,6 +1944,7 @@ class Page {
 	/**
 	 * Returns the timestamp of the last edit
 	 *
+	 * @param bool $force Regenerate the cached value (default: false)
 	 * @return string
 	 */
 	public function get_lastedit( $force = false ) {
@@ -2070,6 +1956,7 @@ class Page {
 	/**
 	 * Returns length of the page
 	 *
+	 * @param bool $force Regenerate the cached value (default: false)
 	 * @return int
 	 */
 	public function get_length( $force = false ) {
@@ -2081,6 +1968,7 @@ class Page {
 	/**
 	 * Returns number of hits the page has received
 	 *
+	 * @param bool $force Regenerate the cached value (default: false)
 	 * @return int
 	 */
 	public function get_hits( $force = false ) {
@@ -2090,11 +1978,10 @@ class Page {
 	}
 
 	/**
-	 * Regenerates lastedit, length, and hits
+	 * (Re)generates lastedit, length, and hits
 	 *
 	 * @param array $pageInfoArray2 Array of values to merge with defaults (default: null)
-	 * @return array Information gathered
-	 * @access protected
+	 * @throws BadTitle
 	 */
 	protected function get_metadata( $pageInfoArray2 = null ) {
 		$pageInfoArray = array(
@@ -2115,6 +2002,10 @@ class Page {
 			pecho( "Special pages are not currently supported by the API.\n\n", PECHO_ERROR );
 			$this->exists = false;
 			$this->special = true;
+		}
+
+		if( isset( $pageInfoRes['query']['redirects'][0] ) ) {
+			$this->redirectFollowed = true;
 		}
 
 		foreach( $pageInfoRes['query']['pages'] as $key => $info ){
@@ -2159,15 +2050,12 @@ class Page {
 			if( isset( $info['readable'] ) ) $this->readable = true;
 			if( isset( $info['preload'] ) ) $this->preload = $info['preload'];
 			if( isset( $info['displaytitle'] ) ) $this->displaytitle = $info['displaytitle'];
-
-			return $pageInfoRes;
 		}
 	}
 
 	/**
 	 * Returns all links to the page
 	 *
-	 * @access public
 	 * @param array $namespaces Namespaces to get. Default array( 0 );
 	 * @param string $redirects How to handle redirects. 'all' = List all pages. 'redirects' = Only list redirects. 'nonredirects' = Don't list redirects. Default 'all'
 	 * @param bool $followredir List links through redirects to the page
@@ -2194,7 +2082,6 @@ class Page {
 	/*
 	 * Rollbacks the latest edit(s) to a page.
 	 * 
-	 * @access public
 	 * @see http://www.mediawiki.org/wiki/API:Edit_-_Rollback
 	 * @param bool $force Whether to force an (attempt at an) edit, regardless of news messages, etc.
 	 * @param string $summary Override the default edit summary for this rollback. Default null.
@@ -2203,7 +2090,7 @@ class Page {
 	 * @return array Details of the rollback perform. ['revid']: The revision ID of the rollback. ['old_revid']: The revision ID of the first (most recent) revision that was rolled back. ['last_revid']: The revision ID of the last (oldest) revision that was rolled back.
 	 */
 	public function rollback( $force = false, $summary = null, $markbot = false, $watch = null ) {
-		global $notag, $tag;
+		global $pgNotag, $pgTag;
 		if( !in_array( 'rollback', $this->wiki->get_userrights() ) ) {
 			pecho( "User is not allowed to rollback edits", PECHO_FATAL );
 			return false;
@@ -2232,7 +2119,7 @@ class Page {
 				pecho( "Summary is over 255 bytes, the maximum allowed.\n\n", PECHO_FATAL );
 				return false;
 			}
-			if( !$notag ) $summary .= $tag;
+			if( !$pgNotag ) $summary .= $pgTag;
 
 			$params['summary'] = $summary;
 		}
@@ -2280,80 +2167,17 @@ class Page {
 	/*
 	 * Performs nobots checking, new message checking, etc
 	 * 
-	 * @access public
 	 * @return void
 	 */
 	protected function preEditChecks( $action = "Edit" ) {
-		global $disablechecks, $masterrunpage;
-		if( $disablechecks ) return;
-		$preeditinfo = array(
-			'action' => 'query',
-			'meta'   => 'userinfo',
-			'uiprop' => 'hasmsg|blockinfo',
-			'prop'   => 'revisions',
-			'titles' => $this->title,
-			'rvprop' => 'content'
-		);
-
-		if( !is_null( $this->wiki->get_runpage() ) ) {
-			$preeditinfo['titles'] .= "|" . $this->wiki->get_runpage();
-		}
-
-		$preeditinfo = $this->wiki->apiQuery( $preeditinfo );
-
-		$messages = false;
-		$blocked = false;
-		if( isset( $preeditinfo['query']['pages'] ) ) {
-			//$oldtext = $preeditinfo['query']['pages'][$this->pageid]['revisions'][0]['*'];
-			foreach( $preeditinfo['query']['pages'] as $pageid => $page ){
-				if( $pageid == $this->pageid ) {
-					$oldtext = $page['revisions'][0]['*'];
-				} elseif( $pageid == "-1" ) {
-					if( $page['title'] == $this->wiki->get_runpage() ) {
-						pecho( "$action failed, enable page does not exist.\n\n", PECHO_WARN );
-						throw new EditError( "Enablepage", "Enable  page does not exist." );
-					} else {
-						$oldtext = '';
-					}
-				} else {
-					$runtext = $page['revisions'][0]['*'];
-				}
-			}
-			if( isset( $preeditinfo['query']['userinfo']['messages'] ) ) $messages = true;
-			if( isset( $preeditinfo['query']['userinfo']['blockedby'] ) ) $blocked = true;
-		} else {
-			$oldtext = '';
-			$runtext = 'enable';
-		}
-
-		//Perform nobots checks, login checks, /Run checks
-		if( checkExclusion( $this->wiki, $oldtext, $this->wiki->get_username(), $this->wiki->get_optout() ) && $this->wiki->get_nobots() ) {
-			throw new EditError( "Nobots", "The page has a nobots template" );
-		}
-
-		if( !is_null( $masterrunpage ) && !preg_match( '/enable|yes|run|go|true/i', $this->wiki->initPage( $masterrunpage )->get_text() ) ) {
-			throw new EditError( "Enablepage", "Script was disabled by Master Run page" );
-		}
-
-		if( !is_null( $this->wiki->get_runpage() ) && !preg_match( '/enable|yes|run|go|true/i', $runtext ) ) {
-			throw new EditError( "Enablepage", "Script was disabled by Run page" );
-		}
-
-		if( $messages && $this->wiki->get_stoponnewmessages() ) {
-			throw new EditError( "NewMessages", "User has new messages" );
-		}
-
-		if( $blocked ) {
-			throw new EditError( "Blocked", "User has been blocked" );
-		}
+	    $this->wiki->preEditChecks( $action, $this->title, $this->pageid );
 	}
 
 	/**
 	 * Returns array of pages that embed (transclude) the page given.
 	 *
-	 * @access public
 	 * @param array $namespace Which namespaces to search (default: null).
-	 * @param int limit How many results to retrieve (default: null i.e. all).
+	 * @param int $limit How many results to retrieve (default: null i.e. all).
 	 * @return array A list of pages the title is transcluded in.
 	 */
 	public function embeddedin( $namespace = null, $limit = null ) {
@@ -2380,7 +2204,6 @@ class Page {
 	 * Purges a list of pages. Shortcut for {@link Wiki::purge()}
 	 *
 	 * @see Wiki::purge()
-	 * @access public
 	 * @return boolean
 	 */
 	public function purge() {
@@ -2390,18 +2213,23 @@ class Page {
 	/**
 	 * Parses wikitext and returns parser output. Shortcut for Wiki::parse
 	 *
-	 * @access public
 	 * @param string $summary Summary to parse. Default null.
 	 * @param string $id Parse the content of this revision
 	 * @param array $prop Properties to retrieve. array( 'text', 'langlinks', 'categories', 'links', 'templates', 'images', 'externallinks', 'sections', 'revid', 'displaytitle', 'headitems', 'headhtml', 'iwlinks', 'wikitext', 'properties' )
+	 * @param string $uselang Code of the language to use in interface messages, etc. (where applicable). Default 'en'.
 	 * @param string $section Only retrieve the content of this section number.  Default null.
 	 * @return array
 	 */
-	public function parse( $summary = null, $id = null, $prop = array(
-		'text', 'langlinks', 'categories', 'links', 'templates', 'images', 'externallinks', 'sections', 'revid',
-		'displaytitle', 'headitems', 'headhtml', 'iwlinks', 'wikitext', 'properties'
-	), $uselang = 'en', $section = null ) {
-		return $this->wiki->parse( null, null, $summary, false, false, $prop, $uselang, $this->title, $id );
+	public function parse( $summary = null, $id = null, $prop = null, $uselang = 'en', $section = null ) {
+		if( $prop === null ){
+			$prop = array(
+				'text', 'langlinks', 'categories', 'links', 'templates', 'images', 'externallinks', 'sections', 'revid',
+				'displaytitle', 'headitems', 'headhtml', 'iwlinks', 'wikitext', 'properties'
+			);
+		}
+		return $this->wiki->parse(
+			null, null, $summary, false, false, $prop, $uselang, $this->title, $id, null, false, $section
+		);
 	}
 
 }

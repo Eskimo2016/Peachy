@@ -57,7 +57,7 @@ class User {
 	 * @var bool
 	 * @access protected
 	 */
-	protected $blocked = false;
+	protected $blocked;
 
 	/**
 	 * Array of block parameters
@@ -114,30 +114,30 @@ class User {
 	 *
 	 * @access public
 	 * @param Wiki &$wikiClass The Wiki class object
-	 * @param mixed $username Username
+	 * @param mixed $pgUsername Username
 	 * @param Wiki $wikiClass
 	 * @return null|false
 	 */
-	function __construct( &$wikiClass, $username ) {
+	public function __construct( Wiki &$wikiClass, $pgUsername ) {
 
 		$this->wiki = & $wikiClass;
 
-		pecho( "Getting user information for $username...\n\n", PECHO_NORMAL );
+		pecho( "Getting user information for $pgUsername...\n\n", PECHO_NORMAL );
 
 		$uiRes = $this->wiki->apiQuery(
 			array(
 				'action'  => 'query',
 				'list'    => 'users|logevents',
-				'ususers' => $username,
+				'ususers' => $pgUsername,
 				'letype'  => 'block',
-				'letitle' => "User:" . $username,
+				'letitle' => "User:" . $pgUsername,
 				'lelimit' => 1,
 				'usprop'  => 'editcount|groups|blockinfo|emailable|registration'
 			)
 		);
 
 		if( !$uiRes ) {
-			$this->username = $username;
+			$this->username = $pgUsername;
 			$this->exists = false;
 		} else {
 			$this->exists = true;
@@ -207,9 +207,10 @@ class User {
 	 * @param bool $tboverride Override the title blacklist.  Requires the tboverride right.  Default false.
 	 * @param string $language Language code to set as default for the user (optional, defaults to content language). Default null.
 	 * @param string $domain Domain for external authentication (optional). Default null.
+	 * @return bool True on success, false otherwise
 	 */
-	public function create( $password = null, $email = null, $mailpassword = false, $reason = null, $realname = null, $tboverride = false, $language = null, $domain = null ) {
-		global $notag, $tag;
+	public function create( $password = null, $email = null, $mailpassword = false, $reason = null, $realname = null, $language = null, $domain = null ) {
+		global $pgNotag, $pgTag;
 		pecho( "Creating user account " . $this->username . "...\n\n", PECHO_NOTICE );
 
 		try{
@@ -219,7 +220,7 @@ class User {
 			return false;
 		}
 
-		$token = $this->apiQuery(
+		$token = $this->wiki->apiQuery(
 			array(
 				'action' => 'createaccount',
 				'name'   => $this->username
@@ -239,7 +240,7 @@ class User {
 		if( !$realname == null ) $apiArray['realname'] = $realname;
 		if( !$domain == null ) $apiArray['domain'] = $domain;
 		if( !$reason == null ) {
-			if( !$notag ) $reason .= $tag;
+			if( !$pgNotag ) $reason .= $pgTag;
 			$apiArray['reason'] = $reason;
 		}
 		if( !$language == null ) $apiArray['language'] = $language;
@@ -290,7 +291,7 @@ class User {
 	 */
 	public function is_blocked( $force = false ) {
 
-		if( $force ) {
+		if( !$force && $this->blocked !== null ) {
 			return $this->blocked;
 		}
 
@@ -305,7 +306,7 @@ class User {
 	 * get_blockinfo function.
 	 *
 	 * @access public
-	 * @return void
+	 * @return array
 	 */
 	public function get_blockinfo() {
 		return $this->blockinfo;
@@ -329,27 +330,41 @@ class User {
 	 * @param string $expiry Expiry. Can be a date, {@link http://www.gnu.org/software/tar/manual/html_node/Date-input-formats.html GNU formatted date}, indefinite, or anything else that MediaWiki accepts. Default indefinite.
 	 * @param array $params Parameters to set. Options are anononly, nocreate, autoblock, noemail, hidename, noallowusertalk. Defdault array().
 	 * @param bool $watch Watch the user/IP's user and talk pages. Default false.
+	 * @param int $range The number of CIDR prefix bits to use for a rangeblock. Default null.
 	 * @return bool
 	 */
-	public function block( $reason = null, $expiry = 'indefinite', $params = array(), $watch = false ) {
-		global $notag, $tag;
+	public function block( $reason = null, $expiry = 'indefinite', $params = array(), $watch = false, $range = null ) {
+		global $pgNotag, $pgTag;
 		$token = $this->wiki->get_tokens();
+		$target = $this->username;
 
 		if( !in_array( 'block', $this->wiki->get_userrights() ) ) {
 			pecho( "User is not allowed to block users.\n\n", PECHO_FATAL );
 			return false;
 		}
 
-		if( !$this->exists() ) {
+		if( !$this->exists() && !$this->is_ip() ) {
 			pecho( "User does not exist.\n\n", PECHO_FATAL );
 			return false;
+		}
+
+		if( $range !== null ) {
+			// intval() returns 0 or 1 on failure
+			$range = intval( $range );
+			if( !$this->is_ip() ) {
+				pecho( "Can only combine a range with an IP address, not a username.\n\n", PECHO_WARN );
+			}
+			if( $range !== null && ( $range < 2 || $range > 32 ) ) {
+				pecho( "Range must be an integer between 2 and 32 inclusive (more restrictive limits may also apply).\n\n", PECHO_WARN );
+			}
+			$target .= '/' . $range;
 		}
 
 		if( !array_key_exists( 'block', $token ) ) return false;
 
 		$apiArr = array(
 			'action'        => 'block',
-			'user'          => $this->username,
+			'user'          => $target,
 			'token'         => $token['block'],
 			'expiry'        => $expiry,
 			'reblock'       => 'yes',
@@ -357,7 +372,7 @@ class User {
 		);
 
 		if( !is_null( $reason ) ) {
-			if( !$notag ) $reason .= $tag;
+			if( !$pgNotag ) $reason .= $pgTag;
 			$apiArr['reason'] = $reason;
 		}
 
@@ -389,7 +404,7 @@ class User {
 
 		Hooks::runHook( 'StartBlock', array( &$apiArr ) );
 
-		pecho( "Blocking {$this->username}...\n\n", PECHO_NOTICE );
+		pecho( "Blocking $target...\n\n", PECHO_NOTICE );
 
 		try{
 			$this->preEditChecks( "Block" );
@@ -401,7 +416,7 @@ class User {
 		$result = $this->wiki->apiQuery( $apiArr, true );
 
 		if( isset( $result['block'] ) ) {
-			if( isset( $result['block']['user'] ) ) {
+			if( !isset( $result['error'] ) ) {
 				$this->__construct( $this->wiki, $this->username );
 				return true;
 			} else {
@@ -424,7 +439,7 @@ class User {
 	 * @return bool
 	 */
 	public function unblock( $reason = null, $id = null ) {
-		global $notag, $tag;
+		global $pgNotag, $pgTag;
 		if( !in_array( 'block', $this->wiki->get_userrights() ) ) {
 			pecho( "User is not allowed to unblock users", PECHO_FATAL );
 			return false;
@@ -445,7 +460,7 @@ class User {
 			unset( $apiArr['user'] );
 		}
 		if( !is_null( $reason ) ) {
-			if( !$notag ) $reason .= $tag;
+			if( !$pgNotag ) $reason .= $pgTag;
 			$apiArr['reason'] = $reason;
 		}
 
@@ -481,65 +496,30 @@ class User {
 	 *
 	 * @access public
 	 * @param bool $force Whether or not to use the locally stored cache. Default false.
-	 * @param Database &$database Use an instance of the Database class to get a more accurate count
-	 * @param bool $liveonly Whether or not to only get the live edit count. Only works with $database. Defaulf false.
+	 * @param Database &$database Use an instance of the mysqli class to get a more accurate count
+	 * @param bool $liveonly Whether or not to only get the live edit count. Only works with $database. Default false.
 	 * @return int Edit count
 	 */
 	public function get_editcount( $force = false, &$database = null, $liveonly = false ) {
-		global $useLabs;
+		global $pgUseLabs;
 		//First check if $database exists, because that returns a more accurate count
-		if( !is_null( $database ) && ( $database instanceOf Database || $database instanceOf DatabaseBase ) ) {
+		if( !is_null( $database ) && $database instanceOf mysqli ) {
 
 			pecho( "Getting edit count for {$this->username} using the Database class...\n\n", PECHO_NORMAL );
 
-			if( $useLabs ) {
-				$count = $database->select(
-					'archive_userindex',
-					'COUNT(*) as count',
-					array(
-						'ar_user_text' => $this->username
-					)
-				);
-			} else {
-				$count = $database->select(
-					'archive',
-					'COUNT(*) as count',
-					array(
-						'ar_user_text' => $this->username
-					)
-				);
-			}
-
-			if( isset( $count[0]['count'] ) && !$liveonly ) {
-				$del_count = $count[0]['count'];
-			} else {
-				$del_count = 0;
-			}
-
-			unset( $count );
-			if( $useLabs ) {
-				$count = $database->select(
-					'revision_userindex',
-					'COUNT(*) as count',
-					array(
-						'rev_user_text' => $this->username
-					)
-				);
-			} else {
-				$count = $database->select(
-					'revision',
-					'COUNT(*) as count',
-					array(
-						'rev_user_text' => $this->username
-					)
-				);
-			}
-
-			if( isset( $count[0]['count'] ) ) {
-				$live_count = $count[0]['count'];
-			} else {
-				$live_count = 0;
-			}
+			if( !$liveonly && $result = mysqli_query( $database, "SELECT COUNT(*) AS count FROM " . ( $pgUseLabs ? "archive_userindex" : "archive" ) . " WHERE `ar_user_text` = '{$this->username}';" ) ) {
+                $res = mysqli_fetch_assoc( $result );
+                $del_count = $res['count'];
+                mysqli_free_result( $result );
+                unset( $res );
+            } else $del_count = 0;
+            
+            if( $result = mysqli_query( $database, "SELECT COUNT(*) AS count FROM " . ( $pgUseLabs ? "revision_userindex" : "revision" ) . " WHERE `rev_user_text` = '{$this->username}';" ) ) {
+                $res = mysqli_fetch_assoc( $result );
+                $live_count = $res['count'];
+                mysqli_free_result( $result );
+                unset( $res );
+            } else $live_count = 0;          
 
 			$this->editcount = $del_count + $live_count;
 		} else {
@@ -606,7 +586,7 @@ class User {
 				array(
 					'action'  => 'query',
 					'list'    => 'users',
-					'ususers' => $username,
+					'ususers' => $this->username,
 					'usprop'  => 'groups'
 				)
 			);
@@ -653,17 +633,18 @@ class User {
 	 * @param string $text Text to send
 	 * @param string $subject Subject of email. Default 'Wikipedia Email'
 	 * @param bool $ccme Whether or not to send a copy of the email to "myself". Default false.
-	 * $return void
+	 * @throws EmailError
+	 * @return bool True on success, false otherwise.
 	 */
 	public function email( $text = null, $subject = "Wikipedia Email", $ccme = false ) {
-		global $notag, $tag;
+		global $pgNotag;
 		if( !$this->has_email() ) {
 			pecho( "Cannot email {$this->username}, user has email disabled", PECHO_FATAL );
 			return false;
 		}
 
 		$tokens = $this->wiki->get_tokens();
-		if( !$notag ) $text .= "\n\nPowered by Peachy " . PEACHYVERSION;
+		if( !$pgNotag ) $text .= "\n\nPowered by Peachy " . PEACHYVERSION;
 		$editarray = array(
 			'action'  => 'emailuser',
 			'target'  => $this->username,
@@ -704,29 +685,15 @@ class User {
 	}
 
 	public function userrights( $add = array(), $remove = array(), $reason = '' ) {
-		global $notag, $tag;
-		$token = $this->wiki->get_tokens();
+		global $pgNotag, $pgTag;
 
-		$token = $this->wiki->apiQuery(
-			array(
-				'action'  => 'query',
-				'list'    => 'users',
-				'ususers' => $this->username,
-				'ustoken' => 'userrights'
-			)
-		);
-
-		if( isset( $token['query']['users'][0]['userrightstoken'] ) ) {
-			$token = $token['query']['users'][0]['userrightstoken'];
-		} else {
-			pecho( "Error retrieving token...\n\n", PECHO_FATAL );
-			return false;
-		}
-		if( !$notag ) $reason .= $tag;
+        $tokens = $this->wiki->get_tokens();
+        
+		if( !$pgNotag ) $reason .= $pgTag;
 		$apiArr = array(
 			'action' => 'userrights',
 			'user'   => $this->username,
-			'token'  => $token,
+			'token'  => $tokens['userrights'],
 			'add'    => implode( '|', $add ),
 			'remove' => implode( '|', $remove ),
 			'reason' => $reason
@@ -807,55 +774,7 @@ class User {
 	 * @return void
 	 */
 	protected function preEditChecks( $action = "Edit" ) {
-		global $disablechecks, $masterrunpage;
-		if( $disablechecks ) return;
-		$preeditinfo = array(
-			'action' => 'query',
-			'meta'   => 'userinfo',
-			'uiprop' => 'hasmsg|blockinfo',
-			'prop'   => 'revisions',
-			'rvprop' => 'content'
-		);
-
-		if( !is_null( $this->wiki->get_runpage() ) ) {
-			$preeditinfo['titles'] = $this->wiki->get_runpage();
-		}
-
-		$preeditinfo = $this->wiki->apiQuery( $preeditinfo );
-
-		$messages = false;
-		$blocked = false;
-		if( isset( $preeditinfo['query']['pages'] ) && !is_null( $this->wiki->get_runpage() ) ) {
-			//$oldtext = $preeditinfo['query']['pages'][$this->pageid]['revisions'][0]['*'];
-			foreach( $preeditinfo['query']['pages'] as $pageid => $page ){
-				if( $pageid == "-1" ) {
-					pecho( "$action failed, enable page does not exist.\n\n", PECHO_WARN );
-					throw new EditError( "Enablepage", "Enable page does not exist." );
-				} else {
-					$runtext = $page['revisions'][0]['*'];
-				}
-			}
-			if( isset( $preeditinfo['query']['userinfo']['messages'] ) ) $messages = true;
-			if( isset( $preeditinfo['query']['userinfo']['blockedby'] ) ) $blocked = true;
-		}
-
-		//Perform login checks, /Run checks
-
-		if( !is_null( $masterrunpage ) && !preg_match( '/enable|yes|run|go|true/i', $this->wiki->initPage( $masterrunpage )->get_text() ) ) {
-			throw new EditError( "Enablepage", "Script was disabled by Master Run page" );
-		}
-
-		if( !is_null( $this->wiki->get_runpage() ) && !preg_match( '/enable|yes|run|go|true/i', $runtext ) ) {
-			throw new EditError( "Enablepage", "Script was disabled by Run page" );
-		}
-
-		if( $messages && $this->wiki->get_stoponnewmessages() ) {
-			throw new EditError( "NewMessages", "User has new messages" );
-		}
-
-		if( $blocked ) {
-			throw new EditError( "Blocked", "User has been blocked" );
-		}
+		$this->wiki->preEditChecks( $action );
 	}
 
 	/**
